@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StairMath</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,'Segoe UI',Roboto,sans-serif; background:#0d1117; color:#e6edf3; }
+  .wrap { max-width:720px; margin:0 auto; padding:36px 20px 60px; }
+  h1 { font-size:1.9rem; margin:0; }
+  .tag { color:#9da7b3; margin:6px 0 18px; }
+  .presets { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:22px; }
+  .presets button { background:#21262d; color:#c9d1d9; border:1px solid #30363d; border-radius:999px; padding:8px 16px; font-size:0.9rem; cursor:pointer; }
+  .presets button:hover { border-color:#3fb950; color:#3fb950; }
+  section { background:#161b22; border:1px solid #30363d; border-radius:12px; padding:20px; margin-bottom:18px; }
+  h2 { font-size:1rem; margin:0 0 14px; color:#e6edf3; }
+  .row { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:14px; }
+  label { display:block; font-size:0.78rem; color:#9da7b3; margin-bottom:4px; }
+  input, select { background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; padding:8px 10px; font-size:0.95rem; width:130px; }
+  .outs { display:flex; flex-wrap:wrap; gap:12px; }
+  .out { flex:1 1 150px; background:#0d1117; border:1px solid #21262d; border-radius:8px; padding:12px 14px; }
+  .out .val { font-size:1.15rem; font-weight:700; color:#58a6ff; }
+  .out .lab { font-size:0.75rem; color:#9da7b3; margin-top:4px; }
+  .verdict { border-radius:8px; padding:10px 14px; margin-bottom:8px; font-size:0.9rem; }
+  .v-good { background:#0d2817; border:1px solid #238636; color:#7ee2a0; }
+  .v-warn { background:#2d2306; border:1px solid #9e6a03; color:#f0c659; }
+  .v-bad { background:#3d1214; border:1px solid #da3633; color:#ff9492; }
+  svg { width:100%; height:auto; background:#0d1117; border:1px solid #21262d; border-radius:8px; }
+  .foot { color:#6e7681; font-size:0.8rem; margin-top:10px; }
+  a { color:#58a6ff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>&#128208; StairMath</h1>
+  <p class="tag">Stair building math - risers capped at 7 3/4 in, treads floored at 10 in, a throat rule the lumberyard never mentions, and a headroom check before the first forehead finds it.</p>
+  <div class="presets">
+    <button data-p="deck">Deck stairs</button>
+    <button data-p="basement">Basement flight</button>
+    <button data-p="loft">Steep loft (code fails)</button>
+    <button data-p="garden">Gentle garden steps</button>
+  </div>
+
+  <section>
+    <h2>1. The stair</h2>
+    <div class="row">
+      <div><label>Total rise (in)</label><input id="rise" type="number" step="0.25" min="1" value="36"></div>
+      <div><label>Ideal riser (in)</label><input id="ideal" type="number" step="0.25" min="4" max="8.5" value="7"></div>
+      <div><label>Tread depth (in)</label><input id="tread" type="number" step="0.5" min="7" value="11"></div>
+      <div><label>Stair width (in)</label><input id="width" type="number" step="1" min="12" value="48"></div>
+    </div>
+    <div class="outs">
+      <div class="out"><div class="val" id="o-risers"></div><div class="lab">Risers</div></div>
+      <div class="out"><div class="val" id="o-unitrise"></div><div class="lab">Unit rise (uniform)</div></div>
+      <div class="out"><div class="val" id="o-treads"></div><div class="lab">Treads</div></div>
+      <div class="out"><div class="val" id="o-run"></div><div class="lab">Total run</div></div>
+      <div class="out"><div class="val" id="o-angle"></div><div class="lab">Stair angle</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Stringers and lumber</h2>
+    <div class="row">
+      <div><label>Stringer board</label>
+        <select id="board"><option value="2x10">2x10</option><option value="2x12" selected>2x12</option></select></div>
+      <div><label>Spacing (in)</label><input id="spacing" type="number" step="2" min="8" value="16"></div>
+    </div>
+    <div class="outs">
+      <div class="out"><div class="val" id="o-stringers"></div><div class="lab">Stringers needed</div></div>
+      <div class="out"><div class="val" id="o-cut"></div><div class="lab">Stringer cut length</div></div>
+      <div class="out"><div class="val" id="o-buy"></div><div class="lab">Buy each</div></div>
+      <div class="out"><div class="val" id="o-throat"></div><div class="lab">Throat left after cuts</div></div>
+      <div class="out"><div class="val" id="o-treadb"></div><div class="lab">Tread boards (12 ft 2x12)</div></div>
+      <div class="out"><div class="val" id="o-screws"></div><div class="lab">Deck screws</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Headroom (indoor stairs)</h2>
+    <div class="row">
+      <div><label>Ceiling height (in)</label><input id="ceiling" type="number" step="1" min="60" placeholder="e.g. 96"></div>
+      <div><label>Opening edge (in from start)</label><input id="opening" type="number" step="1" min="0" placeholder="e.g. 12"></div>
+    </div>
+    <div class="outs">
+      <div class="out"><div class="val" id="o-headroom"></div><div class="lab">Headroom at opening edge (min 80 in)</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Code check</h2>
+    <div id="verdicts"></div>
+  </section>
+
+  <section>
+    <h2>5. Stringer profile</h2>
+    <svg id="svg" viewBox="0 0 720 300" role="img" aria-label="Stringer cut profile"></svg>
+    <p class="foot">One stringer, notch cuts and the board left below them. Scale drawing, inches.</p>
+  </section>
+
+  <p class="foot">IRC 2021 R311.7 residential limits: rise &le; 7.75 in, run &ge; 10 in, headroom &ge; 80 in, handrail at 4+ risers. <a href="https://github.com/iLanis-agent/stairmath">Source</a></p>
+</div>
+<script src="engine.js"></script>
+<script>
+var F = ['rise','ideal','tread','width','board','spacing','ceiling','opening'];
+var PRESETS = {
+  deck:     { rise:36,  ideal:7, tread:11, width:48, board:'2x10', spacing:16, ceiling:'',  opening:''  },
+  basement: { rise:108, ideal:7, tread:11, width:36, board:'2x12', spacing:16, ceiling:96,  opening:12  },
+  loft:     { rise:120, ideal:8, tread:9,  width:30, board:'2x10', spacing:16, ceiling:'',  opening:''  },
+  garden:   { rise:28,  ideal:6, tread:14, width:60, board:'2x12', spacing:16, ceiling:'',  opening:''  }
+};
+function el(id) { return document.getElementById(id); }
+function readInputs() {
+  return {
+    totalRiseIn: +el('rise').value,
+    idealRiseIn: +el('ideal').value,
+    treadDepthIn: +el('tread').value,
+    widthIn: +el('width').value,
+    boardSize: el('board').value,
+    stringerSpacingIn: +el('spacing').value,
+    ceilingIn: el('ceiling').value === '' ? null : +el('ceiling').value,
+    openingIn: el('opening').value === '' ? null : +el('opening').value
+  };
+}
+function fmtIn(x) {
+  if (x == null) return '-';
+  var w = Math.floor(x), f = x - w, s = '';
+  if (f > 0.001) {
+    var six = Math.round(f * 16) / 16;
+    var whole = Math.floor(six); var frac = six - whole;
+    w += whole;
+    if (frac > 0.001) {
+      var den = 16, num = Math.round(frac * 16);
+      while (num % 2 === 0 && den > 1) { num /= 2; den /= 2; }
+      s = ' ' + num + '/' + den;
+    }
+  }
+  return w + s + ' in';
+}
+function draw(g) {
+  var svg = el('svg');
+  var pad = 30;
+  var minY = Math.min(0, g.bottom[0][1], g.bottom[1][1]);
+  var wIn = g.bottom[1][0], hIn = g.riseIn - minY;
+  var sc = Math.min((720 - 2 * pad) / wIn, (300 - 2 * pad) / hIn);
+  function X(x) { return (pad + x * sc).toFixed(1); }
+  function Y(y) { return (300 - pad - (y - minY) * sc).toFixed(1); }
+  var d = 'M ' + X(g.notch[0][0]) + ' ' + Y(g.notch[0][1]);
+  for (var i = 1; i < g.notch.length; i++) d += ' L ' + X(g.notch[i][0]) + ' ' + Y(g.notch[i][1]);
+  d += ' L ' + X(g.bottom[1][0]) + ' ' + Y(g.bottom[1][1]);
+  d += ' L ' + X(g.bottom[0][0]) + ' ' + Y(g.bottom[0][1]) + ' Z';
+  var fl = '<line x1="0" y1="' + Y(0) + '" x2="' + X(0) + '" y2="' + Y(0) + '" stroke="#30363d" stroke-width="2"/>' +
+    '<line x1="' + X(g.runIn) + '" y1="' + Y(g.riseIn) + '" x2="720" y2="' + Y(g.riseIn) + '" stroke="#30363d" stroke-width="2"/>';
+  svg.innerHTML = fl + '<path d="' + d + '" fill="#1f6feb33" stroke="#58a6ff" stroke-width="2"/>';
+}
+function update() {
+  var r = StairMath.compute(readInputs());
+  if (r.error) { el('o-risers').textContent = r.error; return; }
+  el('o-risers').textContent = r.risers;
+  el('o-unitrise').textContent = fmtIn(r.unitRiseIn);
+  el('o-treads').textContent = r.treads;
+  el('o-run').textContent = fmtIn(r.totalRunIn);
+  el('o-angle').textContent = r.angleDeg + ' deg';
+  el('o-stringers').textContent = r.stringerCount;
+  el('o-cut').textContent = r.stringerCutFt + ' ft';
+  el('o-buy').textContent = r.stringerBuyFt ? r.stringerBuyFt + ' ft' : 'landing needed';
+  el('o-throat').textContent = fmtIn(r.throatIn);
+  el('o-treadb').textContent = r.treadBoards;
+  el('o-screws').textContent = r.screws;
+  el('o-headroom').textContent = r.headroomIn == null ? '-' : fmtIn(r.headroomIn);
+  el('verdicts').innerHTML = r.checks.map(function (c) {
+    return '<div class="verdict v-' + c.level + '">' + c.text + '</div>';
+  }).join('');
+  draw(r.geometry);
+}
+F.forEach(function (id) {
+  el(id).addEventListener('input', update);
+  el(id).addEventListener('change', update);
+});
+document.querySelectorAll('.presets button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var p = PRESETS[b.getAttribute('data-p')];
+    el('rise').value = p.rise; el('ideal').value = p.ideal; el('tread').value = p.tread;
+    el('width').value = p.width; el('board').value = p.board; el('spacing').value = p.spacing;
+    el('ceiling').value = p.ceiling; el('opening').value = p.opening;
+    update();
+  });
+});
+update();
+</script>
+</body>
+</html>
